@@ -12,10 +12,18 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
             .find(|c: char| c.is_alphanumeric() || c == '_')
             .is_some();
     } else if let Some(chars) = pattern.strip_prefix("[").and_then(|s| s.strip_suffix("]")) {
-        let mut table = [false; 128];
-        for c in chars.bytes() {
-            table[c as usize] = true;
-        }
+        let mut table;
+        if let Some(chars) = chars.strip_prefix("^") {
+            table = [true; 128];
+            for c in chars.bytes() {
+                table[c as usize] = false
+            }
+        } else {
+            table = [false; 128];
+            for c in chars.bytes() {
+                table[c as usize] = true;
+            }
+        };
         return input_line.bytes().any(|c| table[c as usize]);
     } else {
         panic!("Unhandled pattern: {}", pattern)
