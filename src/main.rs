@@ -6,9 +6,17 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
     if pattern.chars().count() == 1 {
         return input_line.contains(pattern);
     } else if pattern.contains("\\d") {
-        return input_line.chars().any(|c| c.is_numeric());
+        return input_line.find(char::is_numeric).is_some();
     } else if pattern.contains("\\w") {
-        return input_line.chars().any(|c| c.is_alphanumeric() || c == '_');
+        return input_line
+            .find(|c: char| c.is_alphanumeric() || c == '_')
+            .is_some();
+    } else if let Some(chars) = pattern.strip_prefix("[").and_then(|s| s.strip_suffix("]")) {
+        let mut table = [false; 128];
+        for c in chars.bytes() {
+            table[c as usize] = true;
+        }
+        return input_line.bytes().any(|c| table[c as usize]);
     } else {
         panic!("Unhandled pattern: {}", pattern)
     }
